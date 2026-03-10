@@ -39,13 +39,16 @@ class ApiClient {
   }
 
   Future<List<HomeworkItemDto>> getHomeworks(String token) async {
-    final res = await http.get(_uri('/api/homework', {'status': 'all'}), headers: _auth(token));
+    final res = await http.get(_uri('/api/homework', {'status': 'all'}),
+        headers: _auth(token));
     final list = _decodeList(res);
     return list.map((e) => HomeworkItemDto.fromJson(e)).toList();
   }
 
-  Future<List<GradeDto>> getGrades(String token) async {
-    final res = await http.get(_uri('/api/grades'), headers: _auth(token));
+  Future<List<GradeDto>> getGrades(String token,
+      {String semester = '1'}) async {
+    final res = await http.get(_uri('/api/grades', {'semester': semester}),
+        headers: _auth(token));
     final list = _decodeList(res);
     return list.map((e) => GradeDto.fromJson(e)).toList();
   }
@@ -65,7 +68,8 @@ class ApiClient {
     return NoteDto.fromJson(_decodeJson(res));
   }
 
-  Future<NoteDto> updateNote(String token, int noteId, String title, String content) async {
+  Future<NoteDto> updateNote(
+      String token, int noteId, String title, String content) async {
     final res = await http.put(
       _uri('/api/notes/$noteId'),
       headers: {..._auth(token), 'Content-Type': 'application/json'},
@@ -75,7 +79,8 @@ class ApiClient {
   }
 
   Future<void> deleteNote(String token, int noteId) async {
-    final res = await http.delete(_uri('/api/notes/$noteId'), headers: _auth(token));
+    final res =
+        await http.delete(_uri('/api/notes/$noteId'), headers: _auth(token));
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw ApiException(_errorMessage(res), statusCode: res.statusCode);
     }
@@ -88,7 +93,8 @@ class ApiClient {
   }
 
   Future<List<ChatThreadDto>> getChatThreads(String token) async {
-    final res = await http.get(_uri('/api/chat/threads'), headers: _auth(token));
+    final res =
+        await http.get(_uri('/api/chat/threads'), headers: _auth(token));
     final list = _decodeList(res);
     return list.map((e) => ChatThreadDto.fromJson(e)).toList();
   }
@@ -108,7 +114,8 @@ class ApiClient {
     return ChatThreadDto.fromJson(_decodeJson(res));
   }
 
-  Future<ChatThreadDto> createGroupChat(String token, String name, List<String> memberPhones) async {
+  Future<ChatThreadDto> createGroupChat(
+      String token, String name, List<String> memberPhones) async {
     final res = await http.post(
       _uri('/api/chat/groups'),
       headers: {..._auth(token), 'Content-Type': 'application/json'},
@@ -117,7 +124,8 @@ class ApiClient {
     return ChatThreadDto.fromJson(_decodeJson(res));
   }
 
-  Future<ChatThreadDto> inviteToGroup(String token, int conversationId, String phone) async {
+  Future<ChatThreadDto> inviteToGroup(
+      String token, int conversationId, String phone) async {
     final res = await http.post(
       _uri('/api/chat/groups/$conversationId/invite'),
       headers: {..._auth(token), 'Content-Type': 'application/json'},
@@ -126,13 +134,16 @@ class ApiClient {
     return ChatThreadDto.fromJson(_decodeJson(res));
   }
 
-  Future<List<ChatMessageDto>> getChatMessages(String token, int threadId) async {
-    final res = await http.get(_uri('/api/chat/threads/$threadId/messages'), headers: _auth(token));
+  Future<List<ChatMessageDto>> getChatMessages(
+      String token, int threadId) async {
+    final res = await http.get(_uri('/api/chat/threads/$threadId/messages'),
+        headers: _auth(token));
     final list = _decodeList(res);
     return list.map((e) => ChatMessageDto.fromJson(e)).toList();
   }
 
-  Future<ChatMessageDto> sendChatMessage(String token, int threadId, String text) async {
+  Future<ChatMessageDto> sendChatMessage(
+      String token, int threadId, String text) async {
     final res = await http.post(
       _uri('/api/chat/threads/$threadId/messages'),
       headers: {..._auth(token), 'Content-Type': 'application/json'},
@@ -144,6 +155,224 @@ class ApiClient {
   Future<UserProfile> getProfile(String token) async {
     final res = await http.get(_uri('/api/me/profile'), headers: _auth(token));
     return UserProfile.fromJson(_decodeJson(res));
+  }
+
+  Future<List<AlertDto>> getAlerts(String token) async {
+    final res = await http.get(_uri('/api/alerts'), headers: _auth(token));
+    final list = _decodeList(res);
+    return list.map((e) => AlertDto.fromJson(e)).toList();
+  }
+
+  Future<void> markAllAlertsRead(String token) async {
+    final res =
+        await http.post(_uri('/api/alerts/read-all'), headers: _auth(token));
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw ApiException(_errorMessage(res), statusCode: res.statusCode);
+    }
+  }
+
+  Future<List<TeacherAssignmentDto>> getTeacherAssignments(String token) async {
+    final res =
+        await http.get(_uri('/api/teacher/assignments'), headers: _auth(token));
+    final list = _decodeList(res);
+    return list.map((e) => TeacherAssignmentDto.fromJson(e)).toList();
+  }
+
+  Future<TeacherAssignmentDto> createTeacherAssignment(
+    String token, {
+    required String title,
+    required String subject,
+    required String targetClass,
+    required String dueDate,
+    required String note,
+    required String attachmentName,
+  }) async {
+    final res = await http.post(
+      _uri('/api/teacher/assignments'),
+      headers: {..._auth(token), 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'title': title,
+        'subject': subject,
+        'targetClass': targetClass,
+        'dueDate': dueDate,
+        'note': note,
+        'attachmentName': attachmentName,
+      }),
+    );
+    return TeacherAssignmentDto.fromJson(_decodeJson(res));
+  }
+
+  Future<List<ServiceRequestDto>> getServiceRequests(String token,
+      {String category = 'mine'}) async {
+    final res = await http.get(
+        _uri('/api/service-requests', {'category': category}),
+        headers: _auth(token));
+    final list = _decodeList(res);
+    return list.map((e) => ServiceRequestDto.fromJson(e)).toList();
+  }
+
+  Future<ServiceRequestDto> createServiceRequest(
+    String token, {
+    required String title,
+    required String type,
+    required String category,
+    required String description,
+  }) async {
+    final res = await http.post(
+      _uri('/api/service-requests'),
+      headers: {..._auth(token), 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'title': title,
+        'type': type,
+        'category': category,
+        'description': description,
+      }),
+    );
+    return ServiceRequestDto.fromJson(_decodeJson(res));
+  }
+
+  Future<ServiceRequestDto> resolveServiceRequest(String token, int requestId,
+      {required String note}) async {
+    final res = await http.post(
+      _uri('/api/service-requests/$requestId/resolve'),
+      headers: {..._auth(token), 'Content-Type': 'application/json'},
+      body: jsonEncode({'note': note}),
+    );
+    return ServiceRequestDto.fromJson(_decodeJson(res));
+  }
+
+  Future<List<TuitionInvoiceDto>> getTuitionInvoices(String token) async {
+    final res =
+        await http.get(_uri('/api/tuition/invoices'), headers: _auth(token));
+    final list = _decodeList(res);
+    return list.map((e) => TuitionInvoiceDto.fromJson(e)).toList();
+  }
+
+  Future<PayOsCheckoutDto> createPayOsLink(String token, int invoiceId) async {
+    final res = await http.post(
+        _uri('/api/tuition/invoices/$invoiceId/payos-link'),
+        headers: _auth(token));
+    return PayOsCheckoutDto.fromJson(_decodeJson(res));
+  }
+
+  Future<List<TeacherGradeRowDto>> getClassGrades(
+    String token,
+    String className, {
+    String semester = '1',
+  }) async {
+    final res = await http.get(
+      _uri('/api/teacher/classes/$className/grades', {'semester': semester}),
+      headers: _auth(token),
+    );
+    final list = _decodeList(res);
+    return list.map((e) => TeacherGradeRowDto.fromJson(e)).toList();
+  }
+
+  Future<TeacherGradeRowDto> updateTeacherGrade(
+    String token, {
+    required int studentId,
+    required String subject,
+    required String semester,
+    required String oralScores,
+    required String quizScores,
+    required String examScores,
+    required String semesterScore,
+  }) async {
+    final res = await http.post(
+      _uri('/api/teacher/grades'),
+      headers: {..._auth(token), 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'studentId': studentId,
+        'subject': subject,
+        'semester': semester,
+        'oralScores': oralScores,
+        'quizScores': quizScores,
+        'examScores': examScores,
+        'semesterScore': semesterScore,
+      }),
+    );
+    return TeacherGradeRowDto.fromJson(_decodeJson(res));
+  }
+
+  Future<List<HomeworkClassReportDto>> getTeacherHomeworkReports(
+    String token,
+  ) async {
+    final res = await http.get(
+      _uri('/api/teacher/homework-report/classes'),
+      headers: _auth(token),
+    );
+    final list = _decodeList(res);
+    return list.map((e) => HomeworkClassReportDto.fromJson(e)).toList();
+  }
+
+  Future<List<HomeworkStudentStatusDto>> getTeacherHomeworkReportDetails(
+    String token,
+    String className,
+  ) async {
+    final res = await http.get(
+      _uri('/api/teacher/homework-report/classes/$className'),
+      headers: _auth(token),
+    );
+    final list = _decodeList(res);
+    return list.map((e) => HomeworkStudentStatusDto.fromJson(e)).toList();
+  }
+
+  Future<List<TuitionClassSummaryDto>> getExamTuitionOverview(
+      String token) async {
+    final res = await http.get(
+      _uri('/api/exam/tuition-overview'),
+      headers: _auth(token),
+    );
+    final list = _decodeList(res);
+    return list.map((e) => TuitionClassSummaryDto.fromJson(e)).toList();
+  }
+
+  Future<List<TuitionStudentStatusDto>> getExamTuitionClassDetails(
+    String token,
+    String className,
+  ) async {
+    final res = await http.get(
+      _uri('/api/exam/tuition-classes/$className/students'),
+      headers: _auth(token),
+    );
+    final list = _decodeList(res);
+    return list.map((e) => TuitionStudentStatusDto.fromJson(e)).toList();
+  }
+
+  Future<NoticeDeliveryResultDto> createExamNotice(
+    String token, {
+    required String title,
+    required String message,
+    required String target,
+    String? className,
+  }) async {
+    final res = await http.post(
+      _uri('/api/exam/notices'),
+      headers: {..._auth(token), 'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'title': title,
+        'message': message,
+        'target': target,
+        'className': className ?? '',
+      }),
+    );
+    return NoticeDeliveryResultDto.fromJson(_decodeJson(res));
+  }
+
+  Future<TuitionInvoiceDto> refreshPayOsStatus(
+      String token, int invoiceId) async {
+    final res = await http.post(
+        _uri('/api/tuition/invoices/$invoiceId/refresh-status'),
+        headers: _auth(token));
+    return TuitionInvoiceDto.fromJson(_decodeJson(res));
+  }
+
+  Future<TuitionInvoiceDto> confirmTuitionInvoice(
+      String token, int invoiceId) async {
+    final res = await http.post(
+        _uri('/api/tuition/invoices/$invoiceId/confirm'),
+        headers: _auth(token));
+    return TuitionInvoiceDto.fromJson(_decodeJson(res));
   }
 
   Map<String, String> _auth(String token) => {'Authorization': 'Bearer $token'};
@@ -176,7 +405,8 @@ class ApiClient {
       503: 'Dịch vụ tạm thời gián đoạn. Vui lòng thử lại sau.',
       504: 'Máy chủ phản hồi quá chậm. Vui lòng thử lại.',
     };
-    final baseMessage = mappedByStatus[res.statusCode] ?? 'Có lỗi xảy ra khi xử lý yêu cầu.';
+    final baseMessage =
+        mappedByStatus[res.statusCode] ?? 'Có lỗi xảy ra khi xử lý yêu cầu.';
 
     try {
       final data = jsonDecode(res.body);

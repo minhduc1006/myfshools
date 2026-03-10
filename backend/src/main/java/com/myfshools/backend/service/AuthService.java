@@ -54,6 +54,9 @@ public class AuthService {
                 user.getPhone(),
                 user.getFullName(),
                 user.getClassName(),
+                user.getRole() == null ? "STUDENT" : user.getRole().name(),
+                user.getManagedClass(),
+                user.getSubjectSpecialty(),
                 user.getTerm(),
                 user.getGpa(),
                 user.getAvatarInitial()

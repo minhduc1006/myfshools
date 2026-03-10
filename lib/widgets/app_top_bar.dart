@@ -45,31 +45,33 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
                     icon: const Icon(LucideIcons.arrowLeft, color: Colors.white),
                     onPressed: onBack ?? () => Navigator.of(context).maybePop(),
                   ),
-                if (showMenu)
+                if (showMenu && onMenu != null)
                   IconButton(
                     icon: const Icon(LucideIcons.menu, color: Colors.white),
                     onPressed: onMenu,
                   ),
                 Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
             Row(
               children: [
-                if (showSearch)
+                if (showSearch && onSearch != null)
                   IconButton(
                     icon: const Icon(LucideIcons.search, color: Colors.white, size: 20),
                     onPressed: onSearch,
                   ),
-                IconButton(
-                  icon: const Icon(LucideIcons.moreVertical, color: Colors.white, size: 20),
-                  onPressed: onMore ??
-                      () => ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Tính năng đang được phát triển.')),
-                          ),
-                ),
+                if (onMore != null)
+                  IconButton(
+                    icon: const Icon(LucideIcons.moreVertical, color: Colors.white, size: 20),
+                    onPressed: onMore,
+                  ),
               ],
             ),
           ],

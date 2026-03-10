@@ -18,6 +18,10 @@ public class Grade {
     @Column(nullable = false)
     private String subject;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private SchoolSemester semester = SchoolSemester.SEMESTER_1;
+
     @Column(nullable = false, length = 4)
     private String letter;
 
@@ -44,6 +48,8 @@ public class Grade {
     public void setUser(AppUser user) { this.user = user; }
     public String getSubject() { return subject; }
     public void setSubject(String subject) { this.subject = subject; }
+    public SchoolSemester getSemester() { return semester; }
+    public void setSemester(SchoolSemester semester) { this.semester = semester; }
     public String getLetter() { return letter; }
     public void setLetter(String letter) { this.letter = letter; }
     public String getOralScores() { return oralScores; }

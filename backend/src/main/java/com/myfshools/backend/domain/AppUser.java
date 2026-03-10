@@ -24,6 +24,16 @@ public class AppUser {
     @Column(name = "class_name", nullable = false)
     private String className;
 
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    private Role role;
+
+    @Column(name = "managed_class")
+    private String managedClass;
+
+    @Column(name = "subject_specialty")
+    private String subjectSpecialty;
+
     @Column(nullable = false)
     private String term;
 
@@ -45,6 +55,23 @@ public class AppUser {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getClassName() { return className; }
     public void setClassName(String className) { this.className = className; }
+    public Role getRoleEntity() { return role; }
+    public void setRoleEntity(Role role) { this.role = role; }
+
+    public UserRole getRole() {
+        if (role == null || role.getCode() == null) {
+            return UserRole.STUDENT;
+        }
+        try {
+            return UserRole.valueOf(role.getCode());
+        } catch (IllegalArgumentException ex) {
+            return UserRole.STUDENT;
+        }
+    }
+    public String getManagedClass() { return managedClass; }
+    public void setManagedClass(String managedClass) { this.managedClass = managedClass; }
+    public String getSubjectSpecialty() { return subjectSpecialty; }
+    public void setSubjectSpecialty(String subjectSpecialty) { this.subjectSpecialty = subjectSpecialty; }
     public String getTerm() { return term; }
     public void setTerm(String term) { this.term = term; }
     public BigDecimal getGpa() { return gpa; }

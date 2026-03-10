@@ -9,4 +9,5 @@ import java.util.List;
 public interface HomeworkRepository extends JpaRepository<Homework, Long> {
     List<Homework> findByUserIdOrderByDueDateAsc(Long userId);
     List<Homework> findByUserIdAndStatusOrderByDueDateAsc(Long userId, HomeworkStatus status);
+    List<Homework> findByUserClassNameOrderBySubjectAscDueDateAscUserFullNameAsc(String className);
 }

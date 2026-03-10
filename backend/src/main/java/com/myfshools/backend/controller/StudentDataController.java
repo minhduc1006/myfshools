@@ -27,8 +27,8 @@ public class StudentDataController {
     }
 
     @GetMapping("/grades")
-    public List<GradeDto> grades() {
-        return studentDataService.grades();
+    public List<GradeDto> grades(@RequestParam(defaultValue = "1") String semester) {
+        return studentDataService.grades(semester);
     }
 
     @GetMapping("/notes")

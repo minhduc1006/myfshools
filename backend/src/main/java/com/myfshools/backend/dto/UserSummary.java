@@ -7,6 +7,9 @@ public record UserSummary(
         String phone,
         String fullName,
         String className,
+        String role,
+        String managedClass,
+        String subjectSpecialty,
         String term,
         BigDecimal gpa,
         String avatarInitial

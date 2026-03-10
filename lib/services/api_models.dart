@@ -3,6 +3,9 @@ class UserProfile {
   final String phone;
   final String fullName;
   final String className;
+  final String role;
+  final String managedClass;
+  final String subjectSpecialty;
   final String term;
   final String gpa;
   final String avatarInitial;
@@ -12,6 +15,9 @@ class UserProfile {
     required this.phone,
     required this.fullName,
     required this.className,
+    required this.role,
+    required this.managedClass,
+    required this.subjectSpecialty,
     required this.term,
     required this.gpa,
     required this.avatarInitial,
@@ -23,6 +29,9 @@ class UserProfile {
       phone: (json['phone'] ?? '').toString(),
       fullName: (json['fullName'] ?? '').toString(),
       className: (json['className'] ?? '').toString(),
+      role: (json['role'] ?? 'STUDENT').toString(),
+      managedClass: (json['managedClass'] ?? '').toString(),
+      subjectSpecialty: (json['subjectSpecialty'] ?? '').toString(),
       term: (json['term'] ?? '').toString(),
       gpa: (json['gpa'] ?? '').toString(),
       avatarInitial: (json['avatarInitial'] ?? '').toString(),
@@ -98,7 +107,8 @@ class DashboardData {
       term: (json['term'] ?? '').toString(),
       gpa: (json['gpa'] ?? '').toString(),
       upcomingClasses: ((json['upcomingClasses'] as List?) ?? const [])
-          .map((e) => UpcomingClassItem.fromJson((e as Map).cast<String, dynamic>()))
+          .map((e) =>
+              UpcomingClassItem.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
     );
   }
@@ -145,6 +155,7 @@ class HomeworkItemDto {
 class GradeDto {
   final int id;
   final String subject;
+  final String semester;
   final String letter;
   final String oralScores;
   final String quizScores;
@@ -156,6 +167,7 @@ class GradeDto {
   const GradeDto({
     required this.id,
     required this.subject,
+    required this.semester,
     required this.letter,
     required this.oralScores,
     required this.quizScores,
@@ -169,6 +181,7 @@ class GradeDto {
     return GradeDto(
       id: (json['id'] as num).toInt(),
       subject: (json['subject'] ?? '').toString(),
+      semester: (json['semester'] ?? '1').toString(),
       letter: (json['letter'] ?? '').toString(),
       oralScores: (json['oralScores'] ?? '').toString(),
       quizScores: (json['quizScores'] ?? '').toString(),
@@ -339,6 +352,359 @@ class ChatMessageDto {
       fromMe: json['fromMe'] == true,
       text: (json['text'] ?? '').toString(),
       time: (json['time'] ?? '').toString(),
+    );
+  }
+}
+
+class AlertDto {
+  final int id;
+  final String title;
+  final String message;
+  final String type;
+  final String createdAt;
+  final bool read;
+
+  const AlertDto({
+    required this.id,
+    required this.title,
+    required this.message,
+    required this.type,
+    required this.createdAt,
+    required this.read,
+  });
+
+  factory AlertDto.fromJson(Map<String, dynamic> json) {
+    return AlertDto(
+      id: (json['id'] as num).toInt(),
+      title: (json['title'] ?? '').toString(),
+      message: (json['message'] ?? '').toString(),
+      type: (json['type'] ?? '').toString(),
+      createdAt: (json['createdAt'] ?? '').toString(),
+      read: json['read'] == true,
+    );
+  }
+}
+
+class TeacherAssignmentDto {
+  final int id;
+  final String title;
+  final String subject;
+  final String targetClass;
+  final String dueDate;
+  final String note;
+  final String attachmentName;
+  final String createdAt;
+  final String createdBy;
+
+  const TeacherAssignmentDto({
+    required this.id,
+    required this.title,
+    required this.subject,
+    required this.targetClass,
+    required this.dueDate,
+    required this.note,
+    required this.attachmentName,
+    required this.createdAt,
+    required this.createdBy,
+  });
+
+  factory TeacherAssignmentDto.fromJson(Map<String, dynamic> json) {
+    return TeacherAssignmentDto(
+      id: (json['id'] as num).toInt(),
+      title: (json['title'] ?? '').toString(),
+      subject: (json['subject'] ?? '').toString(),
+      targetClass: (json['targetClass'] ?? '').toString(),
+      dueDate: (json['dueDate'] ?? '').toString(),
+      note: (json['note'] ?? '').toString(),
+      attachmentName: (json['attachmentName'] ?? '').toString(),
+      createdAt: (json['createdAt'] ?? '').toString(),
+      createdBy: (json['createdBy'] ?? '').toString(),
+    );
+  }
+}
+
+class ServiceRequestDto {
+  final int id;
+  final String title;
+  final String type;
+  final String category;
+  final String description;
+  final String status;
+  final String handlerNote;
+  final String requester;
+  final String createdAt;
+  final String updatedAt;
+
+  const ServiceRequestDto({
+    required this.id,
+    required this.title,
+    required this.type,
+    required this.category,
+    required this.description,
+    required this.status,
+    required this.handlerNote,
+    required this.requester,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ServiceRequestDto.fromJson(Map<String, dynamic> json) {
+    return ServiceRequestDto(
+      id: (json['id'] as num).toInt(),
+      title: (json['title'] ?? '').toString(),
+      type: (json['type'] ?? '').toString(),
+      category: (json['category'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      handlerNote: (json['handlerNote'] ?? '').toString(),
+      requester: (json['requester'] ?? '').toString(),
+      createdAt: (json['createdAt'] ?? '').toString(),
+      updatedAt: (json['updatedAt'] ?? '').toString(),
+    );
+  }
+}
+
+class TuitionInvoiceDto {
+  final int id;
+  final String title;
+  final int amount;
+  final String dueDate;
+  final String status;
+  final int? payOsOrderCode;
+  final String checkoutUrl;
+  final String qrCode;
+  final String paidAt;
+
+  const TuitionInvoiceDto({
+    required this.id,
+    required this.title,
+    required this.amount,
+    required this.dueDate,
+    required this.status,
+    required this.payOsOrderCode,
+    required this.checkoutUrl,
+    required this.qrCode,
+    required this.paidAt,
+  });
+
+  factory TuitionInvoiceDto.fromJson(Map<String, dynamic> json) {
+    return TuitionInvoiceDto(
+      id: (json['id'] as num).toInt(),
+      title: (json['title'] ?? '').toString(),
+      amount: (json['amount'] as num?)?.toInt() ?? 0,
+      dueDate: (json['dueDate'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      payOsOrderCode: (json['payOsOrderCode'] as num?)?.toInt(),
+      checkoutUrl: (json['checkoutUrl'] ?? '').toString(),
+      qrCode: (json['qrCode'] ?? '').toString(),
+      paidAt: (json['paidAt'] ?? '').toString(),
+    );
+  }
+}
+
+class PayOsCheckoutDto {
+  final int invoiceId;
+  final int orderCode;
+  final String checkoutUrl;
+  final String qrCode;
+  final String status;
+
+  const PayOsCheckoutDto({
+    required this.invoiceId,
+    required this.orderCode,
+    required this.checkoutUrl,
+    required this.qrCode,
+    required this.status,
+  });
+
+  factory PayOsCheckoutDto.fromJson(Map<String, dynamic> json) {
+    return PayOsCheckoutDto(
+      invoiceId: (json['invoiceId'] as num).toInt(),
+      orderCode: (json['orderCode'] as num).toInt(),
+      checkoutUrl: (json['checkoutUrl'] ?? '').toString(),
+      qrCode: (json['qrCode'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+    );
+  }
+}
+
+class TeacherGradeRowDto {
+  final int studentId;
+  final String studentPhone;
+  final String studentName;
+  final String className;
+  final String subject;
+  final String semester;
+  final String oralScores;
+  final String quizScores;
+  final String examScores;
+  final String semesterScore;
+  final String averageScore;
+  final String note;
+
+  const TeacherGradeRowDto({
+    required this.studentId,
+    required this.studentPhone,
+    required this.studentName,
+    required this.className,
+    required this.subject,
+    required this.semester,
+    required this.oralScores,
+    required this.quizScores,
+    required this.examScores,
+    required this.semesterScore,
+    required this.averageScore,
+    required this.note,
+  });
+
+  factory TeacherGradeRowDto.fromJson(Map<String, dynamic> json) {
+    return TeacherGradeRowDto(
+      studentId: (json['studentId'] as num).toInt(),
+      studentPhone: (json['studentPhone'] ?? '').toString(),
+      studentName: (json['studentName'] ?? '').toString(),
+      className: (json['className'] ?? '').toString(),
+      subject: (json['subject'] ?? '').toString(),
+      semester: (json['semester'] ?? '').toString(),
+      oralScores: (json['oralScores'] ?? '').toString(),
+      quizScores: (json['quizScores'] ?? '').toString(),
+      examScores: (json['examScores'] ?? '').toString(),
+      semesterScore: (json['semesterScore'] ?? '').toString(),
+      averageScore: (json['averageScore'] ?? '').toString(),
+      note: (json['note'] ?? '').toString(),
+    );
+  }
+}
+
+class HomeworkClassReportDto {
+  final String className;
+  final int totalStudents;
+  final int submittedCount;
+  final int pendingCount;
+  final int overdueCount;
+
+  const HomeworkClassReportDto({
+    required this.className,
+    required this.totalStudents,
+    required this.submittedCount,
+    required this.pendingCount,
+    required this.overdueCount,
+  });
+
+  factory HomeworkClassReportDto.fromJson(Map<String, dynamic> json) {
+    return HomeworkClassReportDto(
+      className: (json['className'] ?? '').toString(),
+      totalStudents: (json['totalStudents'] as num?)?.toInt() ?? 0,
+      submittedCount: (json['submittedCount'] as num?)?.toInt() ?? 0,
+      pendingCount: (json['pendingCount'] as num?)?.toInt() ?? 0,
+      overdueCount: (json['overdueCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class HomeworkStudentStatusDto {
+  final String studentPhone;
+  final String studentName;
+  final String className;
+  final String title;
+  final String subject;
+  final String dueDate;
+  final String status;
+
+  const HomeworkStudentStatusDto({
+    required this.studentPhone,
+    required this.studentName,
+    required this.className,
+    required this.title,
+    required this.subject,
+    required this.dueDate,
+    required this.status,
+  });
+
+  factory HomeworkStudentStatusDto.fromJson(Map<String, dynamic> json) {
+    return HomeworkStudentStatusDto(
+      studentPhone: (json['studentPhone'] ?? '').toString(),
+      studentName: (json['studentName'] ?? '').toString(),
+      className: (json['className'] ?? '').toString(),
+      title: (json['title'] ?? '').toString(),
+      subject: (json['subject'] ?? '').toString(),
+      dueDate: (json['dueDate'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+    );
+  }
+}
+
+class TuitionClassSummaryDto {
+  final String className;
+  final int totalStudents;
+  final int paidStudents;
+  final int pendingStudents;
+  final int unpaidStudents;
+  final int totalAmount;
+  final int paidAmount;
+
+  const TuitionClassSummaryDto({
+    required this.className,
+    required this.totalStudents,
+    required this.paidStudents,
+    required this.pendingStudents,
+    required this.unpaidStudents,
+    required this.totalAmount,
+    required this.paidAmount,
+  });
+
+  factory TuitionClassSummaryDto.fromJson(Map<String, dynamic> json) {
+    return TuitionClassSummaryDto(
+      className: (json['className'] ?? '').toString(),
+      totalStudents: (json['totalStudents'] as num?)?.toInt() ?? 0,
+      paidStudents: (json['paidStudents'] as num?)?.toInt() ?? 0,
+      pendingStudents: (json['pendingStudents'] as num?)?.toInt() ?? 0,
+      unpaidStudents: (json['unpaidStudents'] as num?)?.toInt() ?? 0,
+      totalAmount: (json['totalAmount'] as num?)?.toInt() ?? 0,
+      paidAmount: (json['paidAmount'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class TuitionStudentStatusDto {
+  final int studentId;
+  final String studentPhone;
+  final String studentName;
+  final String className;
+  final String status;
+  final int totalAmount;
+  final int paidAmount;
+
+  const TuitionStudentStatusDto({
+    required this.studentId,
+    required this.studentPhone,
+    required this.studentName,
+    required this.className,
+    required this.status,
+    required this.totalAmount,
+    required this.paidAmount,
+  });
+
+  factory TuitionStudentStatusDto.fromJson(Map<String, dynamic> json) {
+    return TuitionStudentStatusDto(
+      studentId: (json['studentId'] as num).toInt(),
+      studentPhone: (json['studentPhone'] ?? '').toString(),
+      studentName: (json['studentName'] ?? '').toString(),
+      className: (json['className'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      totalAmount: (json['totalAmount'] as num?)?.toInt() ?? 0,
+      paidAmount: (json['paidAmount'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class NoticeDeliveryResultDto {
+  final int deliveredCount;
+
+  const NoticeDeliveryResultDto({required this.deliveredCount});
+
+  factory NoticeDeliveryResultDto.fromJson(Map<String, dynamic> json) {
+    return NoticeDeliveryResultDto(
+      deliveredCount: (json['deliveredCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

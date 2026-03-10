@@ -6,7 +6,6 @@ import '../services/api_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_card.dart';
 import '../widgets/app_top_bar.dart';
-import '../widgets/badge.dart';
 
 class TimetableScreen extends StatefulWidget {
   final ApiClient apiClient;
@@ -49,44 +48,53 @@ class _TimetableScreenState extends State<TimetableScreen> {
       if (!mounted) return;
 
       final builtWeeks = _buildWeeks(data);
-      final today = DateTime.now();
-      int weekIndex = builtWeeks.indexWhere((week) => !today.isBefore(week.start) && !today.isAfter(week.end));
-      if (weekIndex < 0) {
-        weekIndex = builtWeeks.isEmpty ? 0 : 0;
-      }
-
-      final defaultDay = builtWeeks.isEmpty ? null : builtWeeks[weekIndex].days.firstOrNull;
+      final today = DateUtils.dateOnly(DateTime.now());
+      final currentIndex = builtWeeks.indexWhere(
+        (week) => !today.isBefore(week.start) && !today.isAfter(week.end),
+      );
+      final initialWeekIndex = currentIndex >= 0 ? currentIndex : 0;
+      final initialDateKey = builtWeeks.isEmpty ? null : _dateKey(builtWeeks[initialWeekIndex].days.first.date);
 
       setState(() {
         allItems = data;
         weeks = builtWeeks;
-        selectedWeekIndex = weekIndex;
-        selectedDateKey = defaultDay == null ? null : _dateKey(defaultDay.date);
+        selectedWeekIndex = initialWeekIndex;
+        selectedDateKey = initialDateKey;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => error = e.toString());
     } finally {
-      if (mounted) setState(() => loading = false);
+      if (mounted) {
+        setState(() => loading = false);
+      }
     }
   }
 
   List<_WeekInfo> _buildWeeks(List<ScheduleItemDto> items) {
-    final map = <DateTime, Map<String, _DayInfo>>{};
+    final grouped = <DateTime, Map<String, _DayInfo>>{};
 
     for (final item in items) {
-      final date = DateTime.parse(item.scheduleDate);
+      final parsed = DateTime.tryParse(item.scheduleDate);
+      if (parsed == null) continue;
+
+      final date = DateUtils.dateOnly(parsed);
       final weekStart = date.subtract(Duration(days: date.weekday - 1));
-      map.putIfAbsent(weekStart, () => {});
-      map[weekStart]![_dateKey(date)] = _DayInfo(
-        date: date,
-        short: item.dayShort,
-        full: item.dayFull,
-        weekOfSemester: item.weekOfSemester,
+      final dateKey = _dateKey(date);
+
+      final weekDays = grouped.putIfAbsent(weekStart, () => <String, _DayInfo>{});
+      weekDays.putIfAbsent(
+        dateKey,
+        () => _DayInfo(
+          date: date,
+          short: item.dayShort,
+          full: item.dayFull,
+          weekOfSemester: item.weekOfSemester,
+        ),
       );
     }
 
-    final entries = map.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
+    final entries = grouped.entries.toList()..sort((a, b) => a.key.compareTo(b.key));
     return entries.map((entry) {
       final days = entry.value.values.toList()..sort((a, b) => a.date.compareTo(b.date));
       return _WeekInfo(
@@ -105,31 +113,47 @@ class _TimetableScreenState extends State<TimetableScreen> {
   }
 
   List<ScheduleItemDto> get selectedItems {
-    if (selectedDateKey == null) return const [];
-    return allItems.where((e) => e.scheduleDate == selectedDateKey).toList();
+    final key = selectedDateKey;
+    if (key == null) return const [];
+    return allItems.where((item) => item.scheduleDate == key).toList()
+      ..sort((a, b) => a.startTime.compareTo(b.startTime));
   }
 
   void _changeWeek(int delta) {
     if (weeks.isEmpty) return;
-    final next = selectedWeekIndex + delta;
-    if (next < 0 || next >= weeks.length) return;
+
+    final nextIndex = selectedWeekIndex + delta;
+    if (nextIndex < 0 || nextIndex >= weeks.length) return;
 
     setState(() {
-      selectedWeekIndex = next;
-      selectedDateKey = _dateKey(weeks[next].days.first.date);
+      selectedWeekIndex = nextIndex;
+      selectedDateKey = _dateKey(weeks[nextIndex].days.first.date);
     });
   }
 
   String _dateKey(DateTime date) {
-    final mm = date.month.toString().padLeft(2, '0');
-    final dd = date.day.toString().padLeft(2, '0');
-    return '${date.year}-$mm-$dd';
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day';
+  }
+
+  Color _parseColor(String hex) {
+    final clean = hex.replaceAll('#', '');
+    if (clean.length != 6) return AppColors.primary;
+    return Color(int.parse('FF$clean', radix: 16));
+  }
+
+  bool _isOffDay(ScheduleItemDto item) {
+    final subject = item.subject.toLowerCase();
+    return subject.contains('nghỉ') || subject.contains('không học') || item.room.trim().toUpperCase() == 'OFF';
   }
 
   @override
   Widget build(BuildContext context) {
     if (loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (error != null) {
@@ -138,9 +162,15 @@ class _TimetableScreenState extends State<TimetableScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(error!),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(error!, textAlign: TextAlign.center),
+              ),
               const SizedBox(height: 8),
-              ElevatedButton(onPressed: _load, child: const Text('Thử lại')),
+              ElevatedButton(
+                onPressed: _load,
+                child: const Text('Thử lại'),
+              ),
             ],
           ),
         ),
@@ -152,11 +182,11 @@ class _TimetableScreenState extends State<TimetableScreen> {
       return const Scaffold(
         body: Column(
           children: [
-            AppTopBar(title: 'Thời khóa biểu', showSearch: true),
+            AppTopBar(title: 'Thời khóa biểu'),
             Expanded(
               child: Center(
                 child: Text(
-                  'Chưa có dữ liệu thời khóa biểu',
+                  'Chưa có dữ liệu thời khóa biểu.',
                   style: TextStyle(color: AppColors.mutedForeground),
                 ),
               ),
@@ -175,7 +205,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
     return Scaffold(
       body: Column(
         children: [
-          const AppTopBar(title: 'Thời khóa biểu', showSearch: true),
+          const AppTopBar(title: 'Thời khóa biểu'),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _load,
@@ -215,13 +245,13 @@ class _TimetableScreenState extends State<TimetableScreen> {
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               children: week.days.map((day) {
-                                final active = _dateKey(day.date) == selectedDateKey;
+                                final active = _dateKey(day.date) == _dateKey(selectedDay.date);
                                 return InkWell(
-                                  onTap: () => setState(() => selectedDateKey = _dateKey(day.date)),
                                   borderRadius: BorderRadius.circular(16),
+                                  onTap: () => setState(() => selectedDateKey = _dateKey(day.date)),
                                   child: Container(
-                                    width: 64,
-                                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                                    width: 58,
+                                    margin: const EdgeInsets.symmetric(horizontal: 4),
                                     padding: const EdgeInsets.symmetric(vertical: 10),
                                     decoration: BoxDecoration(
                                       color: active ? AppColors.primary : AppColors.muted,
@@ -233,14 +263,16 @@ class _TimetableScreenState extends State<TimetableScreen> {
                                           day.short,
                                           style: TextStyle(
                                             color: active ? Colors.white : AppColors.mutedForeground,
-                                            fontSize: 12,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 4),
                                         Text(
                                           '${day.date.day}',
                                           style: TextStyle(
                                             color: active ? Colors.white : AppColors.foreground,
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w800,
                                           ),
                                         ),
@@ -254,72 +286,140 @@ class _TimetableScreenState extends State<TimetableScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${selectedDay.full}, ${selectedDay.date.day}/${selectedDay.date.month}/${selectedDay.date.year}',
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                            '${selectedDay.full}, ngày ${selectedDay.date.day}/${selectedDay.date.month}/${selectedDay.date.year}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           if (items.isEmpty)
                             const AppCard(
-                              child: Center(
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 18),
-                                  child: Text('Không có lịch học', style: TextStyle(color: AppColors.mutedForeground)),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8),
+                                child: Center(
+                                  child: Text(
+                                    'Không có lịch học trong ngày này.',
+                                    style: TextStyle(color: AppColors.mutedForeground),
+                                  ),
                                 ),
                               ),
                             )
                           else
-                            ...items.map((it) {
-                              final color = _parseColor(it.colorHex);
-                              final isHoliday = it.room == 'OFF';
+                            ...items.map((item) {
+                              final offDay = _isOffDay(item);
+                              final stripeColor = offDay ? AppColors.mutedForeground : _parseColor(item.colorHex);
+
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: AppCard(
+                                  padding: EdgeInsets.zero,
                                   child: Row(
                                     children: [
                                       Container(
-                                        width: 10,
-                                        height: 70,
-                                        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+                                        width: 6,
+                                        height: offDay ? 96 : 112,
+                                        decoration: BoxDecoration(
+                                          color: stripeColor,
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(12),
+                                            bottomLeft: Radius.circular(12),
+                                          ),
+                                        ),
                                       ),
-                                      const SizedBox(width: 12),
                                       Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(it.subject, style: const TextStyle(fontWeight: FontWeight.w800)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: offDay
+                                              ? Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      item.subject,
+                                                      style: const TextStyle(
+                                                        fontWeight: FontWeight.w800,
+                                                        fontSize: 16,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(height: 6),
+                                                    const Text(
+                                                      'Không học theo kế hoạch năm học.',
+                                                      style: TextStyle(
+                                                        color: AppColors.mutedForeground,
+                                                        height: 1.4,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                )
+                                              : Column(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: Text(
+                                                            item.subject,
+                                                            style: const TextStyle(
+                                                              fontWeight: FontWeight.w800,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          '${item.startTime} - ${item.endTime}',
+                                                          style: const TextStyle(
+                                                            color: AppColors.mutedForeground,
+                                                            fontWeight: FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 10),
+                                                    Row(
+                                                      children: [
+                                                        const Icon(
+                                                          LucideIcons.mapPin,
+                                                          size: 16,
+                                                          color: AppColors.mutedForeground,
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            item.room,
+                                                            style: const TextStyle(
+                                                              color: AppColors.mutedForeground,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    const SizedBox(height: 8),
+                                                    Row(
+                                                      children: [
+                                                        const Icon(
+                                                          LucideIcons.user,
+                                                          size: 16,
+                                                          color: AppColors.mutedForeground,
+                                                        ),
+                                                        const SizedBox(width: 8),
+                                                        Expanded(
+                                                          child: Text(
+                                                            item.teacher,
+                                                            style: const TextStyle(
+                                                              color: AppColors.mutedForeground,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
                                                 ),
-                                                if (!isHoliday) AppBadge(it.startTime),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              isHoliday ? 'Không học theo kế hoạch năm học' : 'Phòng ${it.room}',
-                                              style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              isHoliday ? it.teacher : 'GV: ${it.teacher}',
-                                              style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13),
-                                            ),
-                                            if (!isHoliday) ...[
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${it.startTime} - ${it.endTime}',
-                                                style: const TextStyle(color: AppColors.mutedForeground, fontSize: 13),
-                                              ),
-                                            ],
-                                          ],
                                         ),
                                       ),
                                     ],
@@ -339,13 +439,6 @@ class _TimetableScreenState extends State<TimetableScreen> {
       ),
     );
   }
-
-  Color _parseColor(String hex) {
-    final cleaned = hex.replaceFirst('#', '');
-    final value = int.tryParse('FF$cleaned', radix: 16);
-    if (value == null) return AppColors.primary;
-    return Color(value);
-  }
 }
 
 class _NavPill extends StatelessWidget {
@@ -362,17 +455,18 @@ class _NavPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: enabled ? onTap : null,
       borderRadius: BorderRadius.circular(12),
+      onTap: enabled ? onTap : null,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        width: 34,
+        height: 34,
         decoration: BoxDecoration(
-          color: AppColors.muted,
+          color: enabled ? AppColors.muted : AppColors.muted.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(
           icon,
-          size: 16,
+          size: 18,
           color: enabled ? AppColors.foreground : AppColors.mutedForeground,
         ),
       ),
@@ -406,8 +500,4 @@ class _DayInfo {
     required this.full,
     required this.weekOfSemester,
   });
-}
-
-extension _FirstOrNullExtension<T> on List<T> {
-  T? get firstOrNull => isEmpty ? null : first;
 }

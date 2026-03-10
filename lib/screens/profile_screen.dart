@@ -54,13 +54,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text(snapshot.error.toString()),
                   const SizedBox(height: 8),
-                  ElevatedButton(onPressed: _reload, child: const Text('Retry')),
+                  ElevatedButton(
+                      onPressed: _reload, child: const Text('Retry')),
                 ],
               ),
             );
           }
 
           final user = snapshot.data!;
+          final isStudent = user.role == 'STUDENT';
           return SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 92),
             child: Column(
@@ -70,7 +72,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                   decoration: const BoxDecoration(
                     color: AppColors.primary,
-                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
+                    borderRadius: BorderRadius.only(
+                        bottomLeft: Radius.circular(24),
+                        bottomRight: Radius.circular(24)),
                   ),
                   child: SafeArea(
                     bottom: false,
@@ -78,16 +82,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 30,
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          child: Text(user.avatarInitial, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 22)),
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          child: Text(user.avatarInitial,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 22)),
                         ),
                         const SizedBox(width: 14),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(user.fullName, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
+                            Text(user.fullName,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w800)),
                             const SizedBox(height: 4),
-                            Text('${user.className} - ${user.term}', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 13)),
+                            Text('${user.className} - ${user.term}',
+                                style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.8),
+                                    fontSize: 13)),
                           ],
                         ),
                       ],
@@ -98,28 +113,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
                   child: Column(
                     children: [
-                      InkWell(
-                        onTap: () => widget.onNavigate('grades'),
-                        borderRadius: BorderRadius.circular(12),
-                        child: const AppCard(
-                          child: _ProfileRow(LucideIcons.trendingUp, 'Điểm số', AppColors.accent),
+                      if (isStudent) ...[
+                        InkWell(
+                          onTap: () => widget.onNavigate('grades'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: const AppCard(
+                            child: _ProfileRow(LucideIcons.trendingUp,
+                                'Điểm số', AppColors.accent),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      InkWell(
-                        onTap: () => widget.onNavigate('notes'),
-                        borderRadius: BorderRadius.circular(12),
-                        child: const AppCard(
-                          child: _ProfileRow(LucideIcons.bookOpen, 'Ghi chú', AppColors.primary),
+                        const SizedBox(height: 12),
+                        InkWell(
+                          onTap: () => widget.onNavigate('notes'),
+                          borderRadius: BorderRadius.circular(12),
+                          child: const AppCard(
+                            child: _ProfileRow(LucideIcons.bookOpen, 'Ghi chú',
+                                AppColors.primary),
+                          ),
                         ),
+                        const SizedBox(height: 12),
+                      ],
+                      const AppCard(
+                        child: _ProfileRow(LucideIcons.settings, 'Cài đặt',
+                            AppColors.secondary),
                       ),
                       const SizedBox(height: 12),
                       const AppCard(
-                        child: _ProfileRow(LucideIcons.settings, 'Cài đặt', AppColors.secondary),
-                      ),
-                      const SizedBox(height: 12),
-                      const AppCard(
-                        child: _ProfileRow(LucideIcons.helpCircle, 'Trợ giúp', AppColors.secondary),
+                        child: _ProfileRow(LucideIcons.helpCircle, 'Trợ giúp',
+                            AppColors.secondary),
                       ),
                       const SizedBox(height: 24),
                       SizedBox(
@@ -132,7 +153,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             backgroundColor: AppColors.destructive,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
@@ -162,12 +184,17 @@ class _ProfileRow extends StatelessWidget {
         Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(color: color.withOpacity(0.10), borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(12)),
           child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.w800))),
-        const Icon(LucideIcons.chevronRight, size: 16, color: AppColors.mutedForeground),
+        Expanded(
+            child: Text(label,
+                style: const TextStyle(fontWeight: FontWeight.w800))),
+        const Icon(LucideIcons.chevronRight,
+            size: 16, color: AppColors.mutedForeground),
       ],
     );
   }

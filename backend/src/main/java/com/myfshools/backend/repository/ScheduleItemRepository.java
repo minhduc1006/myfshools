@@ -9,4 +9,6 @@ public interface ScheduleItemRepository extends JpaRepository<ScheduleItem, Long
     List<ScheduleItem> findByUserIdOrderByIdAsc(Long userId);
 
     List<ScheduleItem> findByUserIdOrderByScheduleDateAscStartTimeAsc(Long userId);
+
+    List<ScheduleItem> findByTeacherOrderByScheduleDateAscStartTimeAsc(String teacher);
 }

@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 
 import '../theme/app_theme.dart';
 
 class BottomNav extends StatelessWidget {
   final String activeTab;
+  final List<(String, IconData, String)> tabs;
   final ValueChanged<String> onTabChange;
 
-  const BottomNav({super.key, required this.activeTab, required this.onTabChange});
+  const BottomNav({
+    super.key,
+    required this.activeTab,
+    required this.tabs,
+    required this.onTabChange,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final tabs = const [
-      ('dashboard', LucideIcons.home, 'Trang chủ'),
-      ('timetable', LucideIcons.calendar, 'Thời khóa biểu'),
-      ('homework', LucideIcons.clipboardList, 'Bài tập'),
-      ('chat', LucideIcons.messageSquare, 'Chat'),
-      ('profile', LucideIcons.user, 'Cá nhân'),
-    ];
-
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -60,3 +57,4 @@ class BottomNav extends StatelessWidget {
     );
   }
 }
+

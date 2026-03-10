@@ -78,9 +78,10 @@ public class StudentDataService {
         return list.stream().map(this::toHomework).toList();
     }
 
-    public List<GradeDto> grades() {
+    public List<GradeDto> grades(String semester) {
         AppUser user = currentUserService.getRequiredUser();
-        return gradeRepository.findByUserIdOrderBySubjectAsc(user.getId()).stream().map(this::toGrade).toList();
+        SchoolSemester parsed = parseSemester(semester);
+        return gradeRepository.findByUserIdAndSemesterOrderBySubjectAsc(user.getId(), parsed).stream().map(this::toGrade).toList();
     }
 
     public List<NoteDto> notes() {
@@ -118,20 +119,34 @@ public class StudentDataService {
 
     public List<ScheduleItemDto> timetable() {
         AppUser user = currentUserService.getRequiredUser();
-        return scheduleItemRepository.findByUserIdOrderByScheduleDateAscStartTimeAsc(user.getId()).stream()
+        List<ScheduleItem> items;
+        if (canViewTeachingTimetable(user)) {
+            items = deduplicateTeachingSchedule(
+                    scheduleItemRepository.findByTeacherOrderByScheduleDateAscStartTimeAsc(user.getFullName())
+            );
+        } else {
+            items = scheduleItemRepository.findByUserIdOrderByScheduleDateAscStartTimeAsc(user.getId());
+        }
+
+        return items.stream()
                 .map(this::toSchedule)
                 .toList();
     }
 
     public List<UserSummary> chatUsers() {
         AppUser currentUser = currentUserService.getRequiredUser();
+        String scopeClass = chatScopeClass(currentUser);
         return appUserRepository.findAllByOrderByClassNameAscFullNameAsc().stream()
                 .filter(user -> !Objects.equals(user.getId(), currentUser.getId()))
+                .filter(user -> scopeClass == null || Objects.equals(scopeClass, user.getClassName()))
                 .map(user -> new UserSummary(
                         user.getId(),
                         user.getPhone(),
                         user.getFullName(),
                         user.getClassName(),
+                        user.getRole() == null ? "STUDENT" : user.getRole().name(),
+                        user.getManagedClass(),
+                        user.getSubjectSpecialty(),
                         user.getTerm(),
                         user.getGpa(),
                         user.getAvatarInitial()
@@ -182,6 +197,8 @@ public class StudentDataService {
 
         AppUser other = appUserRepository.findByPhone(phone)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
+
+        ensureChatTargetAllowed(me, other);
 
         if (Objects.equals(other.getId(), me.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không thể chat với chính bạn");
@@ -248,6 +265,7 @@ public class StudentDataService {
         members.add(me);
         for (String phone : phones) {
             appUserRepository.findByPhone(phone).ifPresent(u -> {
+                ensureChatTargetAllowed(me, u);
                 if (!Objects.equals(u.getId(), me.getId()) && members.stream().noneMatch(m -> Objects.equals(m.getId(), u.getId()))) {
                     members.add(u);
                 }
@@ -284,6 +302,8 @@ public class StudentDataService {
         AppUser target = appUserRepository.findByPhone(phone)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy người dùng"));
 
+        ensureChatTargetAllowed(me, target);
+
         boolean exists = conversationMemberRepository.findByConversationId(conversationId).stream()
                 .anyMatch(m -> Objects.equals(m.getUser().getId(), target.getId()));
 
@@ -304,12 +324,64 @@ public class StudentDataService {
 
     public ProfileResponse profile() {
         AppUser user = currentUserService.getRequiredUser();
-        return new ProfileResponse(user.getId(), user.getPhone(), user.getFullName(), user.getClassName(), user.getTerm(), user.getGpa(), user.getAvatarInitial());
+        return new ProfileResponse(
+                user.getId(),
+                user.getPhone(),
+                user.getFullName(),
+                user.getClassName(),
+                user.getRole() == null ? "STUDENT" : user.getRole().name(),
+                user.getManagedClass(),
+                user.getSubjectSpecialty(),
+                user.getTerm(),
+                user.getGpa(),
+                user.getAvatarInitial()
+        );
     }
 
     private ConversationMember requireMembership(Long conversationId, Long userId) {
         return conversationMemberRepository.findByConversationIdAndUserId(conversationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Bạn không thuộc cuộc trò chuyện này"));
+    }
+
+    private boolean canViewTeachingTimetable(AppUser user) {
+        return user.getRole() == UserRole.HOMEROOM_TEACHER || user.getRole() == UserRole.SUBJECT_TEACHER;
+    }
+
+    private String chatScopeClass(AppUser user) {
+        if (user.getRole() == UserRole.HOMEROOM_TEACHER
+                && user.getManagedClass() != null
+                && !user.getManagedClass().isBlank()) {
+            return user.getManagedClass();
+        }
+        if (user.getRole() == UserRole.STUDENT
+                && user.getClassName() != null
+                && !user.getClassName().isBlank()) {
+            return user.getClassName();
+        }
+        return null;
+    }
+
+    private void ensureChatTargetAllowed(AppUser me, AppUser other) {
+        String scopeClass = chatScopeClass(me);
+        if (scopeClass != null && !Objects.equals(scopeClass, other.getClassName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chi duoc chat voi nguoi dung trong cung lop");
+        }
+    }
+
+    private List<ScheduleItem> deduplicateTeachingSchedule(List<ScheduleItem> items) {
+        Map<String, ScheduleItem> unique = new LinkedHashMap<>();
+        for (ScheduleItem item : items) {
+            String key = String.join("|",
+                    item.getScheduleDate() == null ? "" : item.getScheduleDate().toString(),
+                    item.getStartTime() == null ? "" : item.getStartTime(),
+                    item.getEndTime() == null ? "" : item.getEndTime(),
+                    item.getSubject() == null ? "" : item.getSubject(),
+                    item.getRoom() == null ? "" : item.getRoom(),
+                    item.getTeacher() == null ? "" : item.getTeacher()
+            );
+            unique.putIfAbsent(key, item);
+        }
+        return new ArrayList<>(unique.values());
     }
 
     private HomeworkDto toHomework(Homework hw) {
@@ -320,6 +392,7 @@ public class StudentDataService {
         return new GradeDto(
                 g.getId(),
                 g.getSubject(),
+                semesterLabel(g.getSemester()),
                 g.getLetter(),
                 g.getOralScores(),
                 g.getQuizScores(),
@@ -405,5 +478,19 @@ public class StudentDataService {
     private String buildPreview(String content) {
         String c = content.trim();
         return c.length() <= 80 ? c : c.substring(0, 77) + "...";
+    }
+
+    private SchoolSemester parseSemester(String semester) {
+        if (semester == null || semester.isBlank() || "1".equals(semester.trim()) || "hk1".equalsIgnoreCase(semester.trim())) {
+            return SchoolSemester.SEMESTER_1;
+        }
+        if ("2".equals(semester.trim()) || "hk2".equalsIgnoreCase(semester.trim())) {
+            return SchoolSemester.SEMESTER_2;
+        }
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hoc ky khong hop le");
+    }
+
+    private String semesterLabel(SchoolSemester semester) {
+        return semester == SchoolSemester.SEMESTER_2 ? "2" : "1";
     }
 }

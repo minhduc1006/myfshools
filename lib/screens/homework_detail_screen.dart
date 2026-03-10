@@ -8,19 +8,53 @@ import '../widgets/badge.dart';
 
 class HomeworkDetailScreen extends StatelessWidget {
   final Map<String, dynamic> item;
-  const HomeworkDetailScreen({super.key, required this.item});
+
+  const HomeworkDetailScreen({
+    super.key,
+    required this.item,
+  });
+
+  void _submitHomework(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Nộp bài tập'),
+        content: const Text(
+            'Bạn có chắc chắn muốn nộp bài tập này không? Hệ thống sẽ ghi nhận thời gian hiện tại.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Hủy')),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Nộp bài thành công!')));
+            },
+            child: const Text('Nộp ngay'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final status = (item['status'] as String?) ?? 'pending';
-    final color = status == 'submitted' ? AppColors.accent : (status == 'overdue' ? AppColors.destructive : AppColors.primary);
-    final badgeText = status == 'submitted' ? 'Đã nộp' : (status == 'overdue' ? 'Quá hạn' : 'Chưa nộp');
+    final color = status == 'submitted'
+        ? AppColors.accent
+        : (status == 'overdue' ? AppColors.destructive : AppColors.primary);
+    final badgeText = status == 'submitted'
+        ? 'Đã nộp'
+        : (status == 'overdue' ? 'Quá hạn' : 'Chưa nộp');
 
     return Scaffold(
       backgroundColor: AppColors.muted,
       body: Column(
         children: [
-          AppTopBar(title: 'Chi tiết bài tập', showBack: true, onBack: () => Navigator.of(context).pop()),
+          AppTopBar(
+              title: 'Chi tiết bài tập',
+              showBack: true,
+              onBack: () => Navigator.of(context).pop()),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -38,45 +72,62 @@ class HomeworkDetailScreen extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(item['title'] ?? '', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                                  Text(item['title'] ?? '',
+                                      style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w900)),
                                   const SizedBox(height: 4),
-                                  Text(item['subject'] ?? '', style: const TextStyle(color: AppColors.mutedForeground)),
+                                  Text(item['subject'] ?? '',
+                                      style: const TextStyle(
+                                          color: AppColors.mutedForeground)),
                                 ],
                               ),
                             ),
-                            AppBadge(badgeText, textColor: color, background: color.withOpacity(0.10)),
+                            AppBadge(badgeText,
+                                textColor: color,
+                                background: color.withValues(alpha: 0.10)),
                           ],
                         ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            const Icon(LucideIcons.calendar, size: 16, color: AppColors.mutedForeground),
+                            const Icon(LucideIcons.calendar,
+                                size: 16, color: AppColors.mutedForeground),
                             const SizedBox(width: 8),
-                            Text('Hạn nộp: ${item['due']}', style: const TextStyle(color: AppColors.mutedForeground)),
+                            Text('Hạn nộp: ${item['due']}',
+                                style: const TextStyle(
+                                    color: AppColors.mutedForeground)),
                           ],
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Mô tả', style: TextStyle(fontWeight: FontWeight.w800)),
+                  const Text('Mô tả',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
                   const AppCard(
                     child: Text(
-                      'Nộp báo cáo (PDF) và source code (nếu có). Trình bày rõ ràng theo yêu cầu môn học.',
-                      style: TextStyle(color: AppColors.mutedForeground, height: 1.4),
+                      'Nộp báo cáo (PDF) và tệp đính kèm theo đúng yêu cầu của giáo viên.',
+                      style: TextStyle(
+                          color: AppColors.mutedForeground, height: 1.4),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Tệp đính kèm', style: TextStyle(fontWeight: FontWeight.w800)),
+                  const Text('Tệp đính kèm',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
                   const SizedBox(height: 8),
-                  AppCard(
+                  const AppCard(
                     child: Row(
-                      children: const [
-                        Icon(LucideIcons.fileText, size: 18, color: AppColors.secondary),
+                      children: [
+                        Icon(LucideIcons.fileText,
+                            size: 18, color: AppColors.secondary),
                         SizedBox(width: 10),
-                        Expanded(child: Text('assignment_requirements.pdf', style: TextStyle(fontWeight: FontWeight.w700))),
-                        Icon(LucideIcons.download, size: 18, color: AppColors.mutedForeground),
+                        Expanded(
+                            child: Text('assignment_requirements.pdf',
+                                style: TextStyle(fontWeight: FontWeight.w700))),
+                        Icon(LucideIcons.download,
+                            size: 18, color: AppColors.mutedForeground),
                       ],
                     ),
                   ),
@@ -84,14 +135,20 @@ class HomeworkDetailScreen extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: status == 'submitted'
+                          ? null
+                          : () => _submitHomework(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         foregroundColor: Colors.white,
+                        disabledBackgroundColor: AppColors.muted,
+                        disabledForegroundColor: AppColors.mutedForeground,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Nộp bài'),
+                      child: Text(
+                          status == 'submitted' ? 'Đã nộp bài' : 'Nộp bài'),
                     ),
                   ),
                 ],

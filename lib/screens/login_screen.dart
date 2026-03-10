@@ -25,8 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   String? errorText;
 
-  final phoneCtrl = TextEditingController(text: '0386852628');
-  final passCtrl = TextEditingController(text: '123456');
+  final phoneCtrl = TextEditingController(text: '');
+  final passCtrl = TextEditingController(text: '');
 
   @override
   void dispose() {
@@ -53,17 +53,36 @@ class _LoginScreenState extends State<LoginScreen> {
       final result = await widget.apiClient.login(phone, password);
       if (!mounted) return;
       widget.onLoggedIn(result.accessToken, result.user.fullName);
+      return;
     } on ApiException catch (e) {
       if (!mounted) return;
-      setState(() => errorText = e.message);
+      setState(() {
+        errorText = e.message;
+        isLoading = false;
+      });
     } catch (_) {
       if (!mounted) return;
-      setState(() => errorText = 'Không thể kết nối backend.');
-    } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      setState(() {
+        errorText = 'Không thể kết nối backend.';
+        isLoading = false;
+      });
     }
+  }
+
+  void _forgotPassword() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Quên mật khẩu?'),
+        content: const Text(
+            'Vui lòng liên hệ giáo viên chủ nhiệm hoặc bộ phận hỗ trợ để được cấp lại mật khẩu.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Đóng'))
+        ],
+      ),
+    );
   }
 
   @override
@@ -90,17 +109,31 @@ class _LoginScreenState extends State<LoginScreen> {
                   Container(
                     width: 64,
                     height: 64,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12)),
                     alignment: Alignment.center,
                     child: ShaderMask(
-                      shaderCallback: (rect) => const LinearGradient(colors: [AppColors.primary, AppColors.secondary]).createShader(rect),
-                      child: const Text('F', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)),
+                      shaderCallback: (rect) => const LinearGradient(
+                              colors: [AppColors.primary, AppColors.secondary])
+                          .createShader(rect),
+                      child: const Text('F',
+                          style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white)),
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text('Đăng nhập', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800, color: Colors.white)),
+                  const Text('Đăng nhập',
+                      style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white)),
                   const SizedBox(height: 8),
-                  Text('Sử dụng tài khoản backend để vào hệ thống', style: TextStyle(color: Colors.white.withOpacity(0.8))),
+                  Text('Sử dụng tài khoản để vào hệ thống',
+                      style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8))),
                 ],
               ),
             ),
@@ -120,10 +153,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'Nhập số điện thoại',
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 14),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -136,30 +176,56 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'Nhập mật khẩu',
                       filled: true,
                       fillColor: const Color(0xFFF5F5F5),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 14),
                       suffixIcon: IconButton(
-                        onPressed: () => setState(() => showPassword = !showPassword),
-                        icon: Icon(showPassword ? LucideIcons.eyeOff : LucideIcons.eye, color: AppColors.mutedForeground),
+                        onPressed: () =>
+                            setState(() => showPassword = !showPassword),
+                        icon: Icon(
+                            showPassword ? LucideIcons.eyeOff : LucideIcons.eye,
+                            color: AppColors.mutedForeground),
                       ),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      Checkbox(
-                        value: remember,
-                        onChanged: (v) => setState(() => remember = v ?? false),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                      SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: Checkbox(
+                          value: remember,
+                          onChanged: (v) =>
+                              setState(() => remember = v ?? false),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4)),
+                        ),
                       ),
-                      const Text('Ghi nhớ đăng nhập', style: TextStyle(fontSize: 14)),
+                      const SizedBox(width: 8),
+                      const Text('Ghi nhớ', style: TextStyle(fontSize: 14)),
+                      const Spacer(),
+                      TextButton(
+                        onPressed: _forgotPassword,
+                        child: const Text('Quên mật khẩu?',
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.w600)),
+                      ),
                     ],
                   ),
                   if (errorText != null) ...[
                     const SizedBox(height: 8),
-                    Text(errorText!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                    Text(errorText!,
+                        style:
+                            const TextStyle(color: Colors.red, fontSize: 13)),
                   ],
                   const SizedBox(height: 12),
                   ElevatedButton(
@@ -168,10 +234,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       backgroundColor: AppColors.primary,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
                     child: isLoading
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: Colors.white))
                         : const Text('Đăng nhập'),
                   ),
                 ],

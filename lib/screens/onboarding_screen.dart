@@ -6,7 +6,12 @@ import '../theme/app_theme.dart';
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onSkip;
   final VoidCallback onDone;
-  const OnboardingScreen({super.key, required this.onSkip, required this.onDone});
+
+  const OnboardingScreen({
+    super.key,
+    required this.onSkip,
+    required this.onDone,
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -16,9 +21,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int current = 0;
 
   static const slides = [
-    _Slide(LucideIcons.bookOpen, 'Quản lý bài tập dễ dàng', 'Theo dõi tất cả bài tập, deadline và nộp bài trực tuyến', AppColors.primary),
-    _Slide(LucideIcons.calendar, 'Thời khóa biểu thông minh', 'Nhận thông báo lịch học, phòng học và giảng viên', AppColors.secondary),
-    _Slide(LucideIcons.messageSquare, 'Kết nối cùng lớp', 'Chat nhóm, chia sẻ tài liệu và hỗ trợ lẫn nhau', AppColors.accent),
+    _Slide(
+      LucideIcons.bookOpen,
+      'Quản lý bài tập dễ dàng',
+      'Theo dõi tất cả bài tập, hạn nộp và tiến độ hoàn thành.',
+      AppColors.primary,
+    ),
+    _Slide(
+      LucideIcons.calendar,
+      'Thời khóa biểu thông minh',
+      'Xem lịch học theo tuần, theo ngày và các mốc nghỉ lễ chính thức.',
+      AppColors.secondary,
+    ),
+    _Slide(
+      LucideIcons.messageSquare,
+      'Kết nối cùng lớp',
+      'Trao đổi với bạn bè và giáo viên ngay trong ứng dụng.',
+      AppColors.accent,
+    ),
   ];
 
   void next() {
@@ -45,7 +65,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   children: [
                     Icon(s.icon, size: 128, color: s.color),
                     const SizedBox(height: 32),
-                    Text(s.title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800)),
+                    Text(
+                      s.title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       s.desc,
@@ -113,7 +137,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ],
                   ),
-                  if (current == 0) ...[
+                  if (current < slides.length - 1) ...[
                     const SizedBox(height: 16),
                     TextButton(
                       onPressed: widget.onSkip,
@@ -135,5 +159,6 @@ class _Slide {
   final String title;
   final String desc;
   final Color color;
+
   const _Slide(this.icon, this.title, this.desc, this.color);
 }

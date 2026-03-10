@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../services/api_client.dart';
@@ -140,9 +140,6 @@ class _NotesScreenState extends State<NotesScreen> {
             title: 'Ghi chú',
             showBack: true,
             onBack: () => Navigator.of(context).pop(),
-            onMore: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Chọn một ghi chú và bấm nút ... để sửa/xóa.')),
-            ),
           ),
           Expanded(
             child: loading
@@ -173,7 +170,10 @@ class _NotesScreenState extends State<NotesScreen> {
                                     Container(
                                       width: 44,
                                       height: 44,
-                                      decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.10), borderRadius: BorderRadius.circular(12)),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(alpha: 0.10),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                       child: const Icon(LucideIcons.stickyNote, color: AppColors.primary, size: 20),
                                     ),
                                     const SizedBox(width: 12),
@@ -214,24 +214,12 @@ class _NotesScreenState extends State<NotesScreen> {
                         ),
                       ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _openEditor(),
-                icon: const Icon(LucideIcons.plus, size: 18),
-                label: const Text('Tạo ghi chú'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-              ),
-            ),
-          ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openEditor(),
+        backgroundColor: AppColors.primary,
+        child: const Icon(LucideIcons.plus, color: Colors.white),
       ),
     );
   }

@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public record GradeDto(
         Long id,
         String subject,
+        String semester,
         String letter,
         String oralScores,
         String quizScores,

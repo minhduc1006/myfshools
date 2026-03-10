@@ -20,3 +20,10 @@ app:
   jwt:
     secret: myfshools-super-secret-key-change-this-at-least-32-bytes
     expiration-ms: 86400000
+  payos:
+    client-id: 7853f8bd-bb0f-4cd3-ae1a-2eb4802b33df
+    api-key: 48b19dc5-61b2-47a3-b6db-b39d384d7ba6
+    checksum-key: ef95a8fb19a28af045fdaa369d613017834ad142ef15129e432725be87b53d5d
+    return-url: ${PAYOS_RETURN_URL:http://localhost:3000/payment/success}
+    cancel-url: ${PAYOS_CANCEL_URL:http://localhost:3000/payment/cancel}
+    base-url: ${PAYOS_BASE_URL:https://api-merchant.payos.vn}
